@@ -1,0 +1,119 @@
+---
+title: "COVID-19 adverse events 2021"
+output: html_document
+date: "2022-12-09"
+---
+
+# Import library
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(lattice)
+library(caret)
+library(rpart)
+library(rpart.plot)
+
+# Read in data from excel file
+library(readxl)
+COVID19_Adverse_Events_2021_Merged <- read_excel("Desktop/30-project challenge/Project 1_ R_Explore and visualize demographics of adverse events experienced by covid 09Dec2023/COVID19_Adverse Events 2021_Merged.xlsx")
+View(COVID19_Adverse_Events_2021_Merged)
+
+
+# Age Analysis
+summary_age <- summary(COVID19_Adverse_Events_2021_Merged$AGE_YR)
+hist_age <- ggplot(COVID19_Adverse_Events_2021_Merged, aes(x = AGE_YR)) +
+  geom_histogram(binwidth = 5, fill = "lightblue", color = "black") +
+  labs(title = "Distribution of Ages", x = "Age (years)", y = "Frequency")
+summary_age
+hist_age
+
+# Gender Analysis
+summary_sex <- table(COVID19_Adverse_Events_2021_Merged$SEX)
+bar_sex <- ggplot(COVID19_Adverse_Events_2021_Merged, aes(x = SEX)) +
+  geom_bar(fill = "lightblue", color = "black") +
+  labs(title = "Sex Distribution", x = "Sex", y = "Count")
+summary_sex
+bar_sex
+
+# AE Symptom Frequency Analysis - Top 5 symptoms
+filtered_symptoms <- na.omit(COVID19_Adverse_Events_2021_Merged$`Symptom 1`)
+symptom_counts <- table(filtered_symptoms)
+sorted_symptoms <- sort(symptom_counts, decreasing = TRUE)
+top_5_symptoms <- head(sorted_symptoms, 5)
+top_5_symptoms
+
+max_count <- max(top_5_symptoms)
+ylim <- c(0, max_count + 500)
+barplot(top_5_symptoms,
+        main = "Top 5 COVID19 Adverse Event Symptoms", 
+        xlab = "Symptom Type", 
+        ylab = "Count", 
+        col = "lightblue", 
+        ylim = ylim)
+
+# Vaccine Manufacture Frequency Analysis
+filtered_manufacturers <- na.omit(COVID19_Adverse_Events_2021_Merged$VAX_MANU)
+manufacturer_counts <- table(filtered_manufacturers)
+sorted_manufacturers <- sort(manufacturer_counts, decreasing = TRUE)
+top_5_man <- head(sorted_manufacturers, 5)
+top_5_man
+
+max_man_count <- max(top_5_man)
+ylim <- c(0, max_man_count + 3900)
+barplot(top_5_man,
+        main = "Top 5 COVID19 Manufactuers", 
+        xlab = "Symptom Type", 
+        ylab = "Count", 
+        col = "lightblue", 
+        ylim = ylim)
+        
+# Relationships between the top 5 manufacturers and top 10 symptoms
+## top 10 symptoms
+top_10_symptoms <- names(head(sort(table(filtered_data$`Symptom 1`), decreasing = TRUE), 10))
+heatmap_data <- table(filtered_data$`Symptom 1`, filtered_data$VAX_MANU)
+heatmap_data <- heatmap_data[top_10_symptoms, ]
+
+## top 5 manufacturers
+top_5_manufacturers <- names(head(sort(table(filtered_data$VAX_MANU), decreasing = TRUE), 5))
+heatmap_data <- heatmap_data[, top_5_manufacturers]
+
+## Convert data to a data frame
+heatmap_df <- as.data.frame(as.table(heatmap_data))
+colnames(heatmap_df) <- c("Symptom", "Vaccine_Manufacturer", "Count")
+
+## Heatmap using ggplot2
+ggplot(heatmap_df, aes(x = Vaccine_Manufacturer, y = Symptom, fill = Count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Heatmap: Top 10 Symptoms vs. Top 5 Vaccine Manufacturers",
+       x = "Vaccine Manufacturers", y = "Symptoms") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        plot.margin = unit(c(1, 1, 1, 1), "cm"))
+
+
+# Relationship between top 5 states vs top 5 symptoms
+filtered_data <- na.omit(COVID19_Adverse_Events_2021_Merged[, c('STATE', 'Symptom 1')])
+
+## Table of counts
+top_5_states <- names(head(sort(table(filtered_data$STATE), decreasing = TRUE), 5))
+top_5_symptoms <- names(head(sort(table(filtered_data$`Symptom 1`), decreasing = TRUE), 5))
+heatmap_data <- table(filtered_data$STATE, filtered_data$`Symptom 1`)
+heatmap_data <- heatmap_data[top_5_states, top_5_symptoms]
+
+## Convert the data to a data frame
+heatmap_df <- as.data.frame(as.table(heatmap_data))
+colnames(heatmap_df) <- c("State", "Symptom", "Count")
+
+## Heatmap using ggplot2 
+ggplot(heatmap_df, aes(x = State, y = Symptom, fill = Count)) +
+  geom_tile() +
+  geom_text(aes(label = Count), vjust = 1) + 
+  scale
+  
+  _fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Heatmap: Top 5 States vs. Top 5 Symptoms",
+       x = "States", y = "Symptoms") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        plot.margin = unit(c(1, 1, 1, 1), "cm"))  
